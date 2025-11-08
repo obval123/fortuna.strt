@@ -3,132 +3,157 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fortuna Nexus | Connect Wallet</title>
+  <title>Fortuna Nexus – Connect Wallet</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+  <script src="https://unpkg.com/@walletconnect/client@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: radial-gradient(circle at top, #0a0a0f 0%, #111 100%);
-      color: #e0e0e0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: white;
       text-align: center;
-      margin: 0;
-      padding: 60px 20px;
+      padding: 50px 20px;
     }
     .container {
       max-width: 420px;
-      margin: auto;
-      background: rgba(255,255,255,0.05);
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.08);
       border-radius: 20px;
-      padding: 40px 30px;
-      box-shadow: 0 0 25px rgba(0,0,0,0.6);
+      padding: 40px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
     }
-    h1 {
-      font-size: 26px;
-      color: #fff;
-      margin-bottom: 10px;
+    img.logo {
+      width: 120px;
+      border-radius: 16px;
+      margin-bottom: 20px;
     }
-    p.desc {
-      font-size: 15px;
-      color: #aaa;
+    h2 {
+      font-size: 22px;
       margin-bottom: 25px;
-      line-height: 1.4;
+      font-weight: 600;
     }
     button {
-      padding: 14px 28px;
-      font-size: 18px;
-      font-weight: 600;
+      width: 90%;
+      margin: 10px 0;
+      padding: 14px;
+      font-size: 16px;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: all 0.3s ease;
-      width: 100%;
-      margin-bottom: 12px;
+      transition: 0.2s;
     }
-    .connect {
-      background: linear-gradient(135deg, #00aaff, #0055ff);
+    .metamask {
+      background: #f6851b;
       color: white;
-      box-shadow: 0 0 10px rgba(0,85,255,0.5);
     }
-    .connect:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px rgba(0,136,255,0.7);
-    }
-    .return {
-      background: #222;
-      color: #ccc;
-    }
-    .opensea {
-      background: linear-gradient(135deg, #2081e2, #1868b7);
+    .walletconnect {
+      background: #3b99fc;
       color: white;
+    }
+    .back {
+      background: #444;
+      color: white;
+    }
+    button:hover {
+      opacity: 0.9;
+      transform: scale(1.03);
     }
     #status {
-      margin-top: 15px;
-      font-size: 15px;
-      color: #77dd77;
-      word-break: break-all;
+      margin-top: 20px;
+      font-size: 14px;
+      opacity: 0.9;
     }
-    .logo {
-      width: 90px;
-      margin-bottom: 15px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,136,255,0.4);
+    .qrcode {
+      margin: 20px auto;
+    }
+    a {
+      color: #3b99fc;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <img src="logo.png" alt="Fortuna Nexus Logo" class="logo">
-    <h1>Fortuna Nexus</h1>
-    <p class="desc">Connect your MetaMask wallet to join the Fortuna draws and unlock your chance to win big. Your luck lives on the blockchain.</p>
-    
-    <button id="connect" class="connect">🔗 Connect Wallet</button>
-    <button id="return" class="return">⬅️ Return to Bot</button>
-    <a href="https://opensea.io/collection/fortuna-nexus" target="_blank">
-      <button class="opensea">🌊 View on OpenSea</button>
-    </a>
+    <h2>Connect Your Wallet</h2>
+
+    <button id="connectMetaMask" class="metamask">🦊 Connect MetaMask</button>
+    <button id="connectWC" class="walletconnect">🔗 Connect via WalletConnect</button>
+    <button id="backToBot" class="back">⬅️ Back to Bot</button>
+
     <p id="status"></p>
+    <div id="qrcode" class="qrcode"></div>
+
+    <p style="margin-top:30px;">
+      View collection on <a href="https://opensea.io/collection/fortuna-nexus" target="_blank">OpenSea</a>
+    </p>
   </div>
 
   <script>
-    const connectBtn = document.getElementById("connect");
-    const returnBtn = document.getElementById("return");
-    const status = document.getElementById("status");
-
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
-    connectBtn.onclick = async () => {
+    const status = document.getElementById("status");
+    const qrContainer = document.getElementById("qrcode");
+
+    const updateStatus = (msg, color = "#fff") => {
+      status.style.color = color;
+      status.innerHTML = msg;
+    };
+
+    // === MetaMask Connect ===
+    document.getElementById("connectMetaMask").onclick = async () => {
       if (!window.ethereum) {
-        status.style.color = "#ff5555";
-        status.innerText = "❌ MetaMask not found. Please install it first.";
+        updateStatus("❌ MetaMask not found.<br>Open this page in a browser with MetaMask installed.", "#ff5555");
         return;
       }
-
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         const signer = provider.getSigner();
         const address = await signer.getAddress();
+        updateStatus("✅ Connected: " + address);
 
-        if (tg) {
-          tg.sendData(address);
-          status.innerText = "✅ Connected: " + address;
-        } else {
-          status.innerText = "✅ Connected: " + address;
-        }
+        if (tg) tg.sendData(address);
       } catch (err) {
-        status.style.color = "#ff5555";
-        status.innerText = "⚠️ Error: " + err.message;
+        updateStatus("❌ Error: " + err.message, "#ff5555");
       }
     };
 
-    returnBtn.onclick = () => {
+    // === WalletConnect Connect ===
+    document.getElementById("connectWC").onclick = async () => {
+      try {
+        updateStatus("🔗 Initializing WalletConnect...");
+        qrContainer.innerHTML = "";
+
+        const bridge = "https://bridge.walletconnect.org";
+        const connector = new window.WalletConnect.default({ bridge, qrcodeModal: null });
+
+        if (!connector.connected) await connector.createSession();
+
+        const uri = connector.uri;
+        updateStatus("📱 Scan QR code with MetaMask Mobile:", "#00ffcc");
+        QRCode.toCanvas(qrContainer, uri, { width: 200 });
+
+        connector.on("connect", (error, payload) => {
+          if (error) throw error;
+          const { accounts } = payload.params[0];
+          const address = accounts[0];
+          updateStatus("✅ Connected: " + address);
+          if (tg) tg.sendData(address);
+        });
+      } catch (err) {
+        updateStatus("❌ Error: " + err.message, "#ff5555");
+      }
+    };
+
+    // === Return to Bot ===
+    document.getElementById("backToBot").onclick = () => {
       if (tg) tg.close();
-      else window.close();
+      else window.location.href = "https://t.me/your_bot_username";
     };
   </script>
 </body>
 </html>
-
-
