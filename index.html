@@ -48,22 +48,23 @@
     }
     .metamask { background: #f6851b; color: white; }
     .walletconnect { background: #3b99fc; color: white; }
-    .openbrowser { background: #28a745; color: white; }
     .back { background: #444; color: white; }
     button:hover:not(:disabled) { opacity: 0.9; transform: scale(1.03); }
     #status { margin-top: 20px; font-size: 14px; opacity: 0.9; line-height: 1.5; }
     .qrcode { margin: 20px auto; }
+    .qrcode canvas { border-radius: 12px; }
     a { color: #3b99fc; text-decoration: none; }
     .debug-info { 
       margin-top: 20px; 
-      font-size: 12px; 
-      opacity: 0.6; 
+      font-size: 11px; 
+      opacity: 0.5; 
       text-align: left; 
-      max-height: 150px; 
+      max-height: 120px; 
       overflow-y: auto;
       background: rgba(0,0,0,0.3);
       padding: 10px;
       border-radius: 8px;
+      font-family: monospace;
     }
   </style>
 </head>
@@ -73,7 +74,7 @@
     <h2>Connect Your Wallet</h2>
 
     <button id="connectMetaMask" class="metamask">🦊 Connect MetaMask</button>
-    <button id="connectWC" class="walletconnect">🔗 Connect via WalletConnect</button>
+    <button id="connectWC" class="walletconnect">📱 Mobile Wallet (QR)</button>
     <button id="backToBot" class="back">⬅️ Back to Bot</button>
 
     <p id="status"></p>
@@ -86,8 +87,7 @@
   </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js" type="application/javascript"></script>
-  <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   
   <script>
     // Debug logger
@@ -96,21 +96,22 @@
     
     function log(message) {
       console.log(message);
-      debugLog.push(new Date().toLocaleTimeString() + ": " + message);
-      if (debugLog.length > 10) debugLog.shift();
+      const time = new Date().toLocaleTimeString();
+      debugLog.push(time + ": " + message);
+      if (debugLog.length > 8) debugLog.shift();
       debugDiv.innerHTML = debugLog.join('<br>');
     }
 
-    log("Script started");
+    log("🚀 Script started");
 
     // Telegram WebApp initialization
     const tg = window.Telegram?.WebApp;
     if (tg) {
-      log("Telegram WebApp detected");
+      log("✅ Telegram WebApp detected");
       tg.ready();
       tg.expand();
     } else {
-      log("Running in browser mode");
+      log("🌐 Browser mode");
     }
 
     const status = document.getElementById("status");
@@ -126,109 +127,111 @@
 
     // === Функция отправки данных в бот ===
     function sendAddressToBot(address) {
-      log("Attempting to send: " + address);
+      log("📤 Sending: " + address.substring(0, 10) + "...");
       
       if (tg && typeof tg.sendData === 'function') {
         try {
           tg.sendData(address);
           updateStatus("✅ Connected! Address sent to bot.", "#00ff88");
-          log("Data sent successfully via Telegram");
+          log("✅ Data sent via Telegram");
           
           // Закрываем WebApp через 2 секунды
           setTimeout(() => {
             if (tg.close) tg.close();
           }, 2000);
         } catch (err) {
-          log("Error sending to Telegram: " + err.message);
+          log("⚠️ Telegram send failed: " + err.message);
           updateStatus("✅ Connected: <code>" + address + "</code><br>⚠️ Please copy and send to bot manually.", "#ffcc00");
         }
       } else {
-        log("Telegram sendData not available");
+        log("ℹ️ Manual copy needed");
         updateStatus("✅ Connected: <code>" + address + "</code><br>📋 Copy this address and send it to the bot.", "#00ff88");
       }
     }
 
-    // === MetaMask Connect ===
+    // === MetaMask Connect (БЕЗ ETHERS.JS - НАПРЯМУЮ!) ===
     connectMetaMaskBtn.onclick = async () => {
-      log("MetaMask button clicked");
+      log("🦊 MetaMask button clicked");
       updateStatus("🔄 Connecting to MetaMask...", "#00ccff");
-      
-      // Проверка наличия ethers
-      if (typeof ethers === 'undefined') {
-        updateStatus("❌ Ethers.js library failed to load. Refresh page.", "#ff5555");
-        log("ERROR: ethers library not loaded");
-        return;
-      }
       
       // Проверка наличия MetaMask
       if (typeof window.ethereum === 'undefined') {
-        updateStatus("❌ MetaMask not found.<br><br>Install MetaMask browser extension from <a href='https://metamask.io' target='_blank' style='color:#00ff88'>metamask.io</a>", "#ff5555");
-        log("ERROR: MetaMask not detected");
+        updateStatus("❌ MetaMask not found.<br><br>📥 Install from <a href='https://metamask.io/download' target='_blank' style='color:#00ff88'>metamask.io/download</a>", "#ff5555");
+        log("❌ MetaMask not detected");
         return;
       }
 
       try {
-        log("Requesting MetaMask accounts...");
+        log("📞 Requesting accounts...");
         
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
+        // ПРЯМОЙ ЗАПРОС К METAMASK (без ethers.js)
+        const accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
         
-        log("Accounts received: " + accounts.length);
+        log("✅ Got " + accounts.length + " account(s)");
         
         if (!accounts || accounts.length === 0) {
-          throw new Error("No accounts returned from MetaMask");
+          throw new Error("No accounts returned");
         }
         
-        const signer = provider.getSigner();
-        const address = await signer.getAddress();
+        const address = accounts[0];
+        log("✅ Address: " + address);
         
-        log("Got address: " + address);
         sendAddressToBot(address);
         
       } catch (err) {
-        log("MetaMask error: " + err.message);
+        log("❌ Error: " + err.message);
         
         if (err.code === 4001) {
-          updateStatus("❌ Connection rejected by user", "#ff5555");
+          updateStatus("❌ You rejected the connection request", "#ff5555");
+        } else if (err.code === -32002) {
+          updateStatus("⚠️ MetaMask is already processing a request.<br>Check MetaMask extension!", "#ffcc00");
         } else {
           updateStatus("❌ Error: " + err.message, "#ff5555");
         }
       }
     };
 
-    // === WalletConnect (упрощённая версия с глубокой ссылкой) ===
+    // === Mobile Wallet QR Code ===
     connectWCBtn.onclick = async () => {
-      log("WalletConnect button clicked");
+      log("📱 QR button clicked");
       
       // Для мобильных - открываем MetaMask напрямую
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       
       if (isMobile) {
         updateStatus("📱 Opening MetaMask Mobile...", "#00ccff");
-        log("Mobile detected - using deep link");
+        log("📱 Mobile detected");
         
         // Deep link для MetaMask Mobile
-        const dappUrl = encodeURIComponent(window.location.href);
+        const currentUrl = window.location.href;
         const metamaskUrl = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
         
-        updateStatus("📱 If MetaMask doesn't open, click <a href='" + metamaskUrl + "' style='color:#00ff88'>here</a>", "#00ffcc");
+        updateStatus("📱 If MetaMask doesn't open automatically,<br>click <a href='" + metamaskUrl + "' style='color:#00ff88; text-decoration:underline;'>here</a>", "#00ffcc");
         
         setTimeout(() => {
           window.location.href = metamaskUrl;
         }, 500);
         
       } else {
-        // Для десктопа показываем QR код с инструкцией
-        updateStatus("📱 <strong>Scan with MetaMask Mobile:</strong><br>1. Open MetaMask app<br>2. Tap Scanner<br>3. Scan QR below<br>4. Approve connection", "#00ffcc");
+        // Для десктопа показываем QR код
+        updateStatus("📱 <strong>Scan with Mobile Wallet:</strong><br>1. Open MetaMask app on phone<br>2. Tap Scanner icon<br>3. Scan QR below<br>4. Connect wallet", "#00ffcc");
         
         qrContainer.innerHTML = "";
         
         try {
           const pageUrl = window.location.href;
-          log("Generating QR for: " + pageUrl);
+          log("🔲 Generating QR for: " + pageUrl.substring(0, 30) + "...");
           
           if (typeof QRCode === 'undefined') {
-            throw new Error("QRCode library not loaded");
+            log("⚠️ QRCode library loading...");
+            // Даём время библиотеке загрузиться
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (typeof QRCode === 'undefined') {
+              throw new Error("QRCode library failed to load");
+            }
           }
           
           const canvas = document.createElement('canvas');
@@ -243,23 +246,23 @@
             }
           }, function(error) {
             if (error) {
-              log("QR error: " + error);
+              log("❌ QR error: " + error);
               updateStatus("❌ Failed to generate QR code", "#ff5555");
             } else {
-              log("QR code generated");
+              log("✅ QR code generated");
             }
           });
           
         } catch (err) {
-          log("QR generation error: " + err.message);
-          updateStatus("❌ Error: " + err.message, "#ff5555");
+          log("❌ QR error: " + err.message);
+          updateStatus("❌ Error generating QR: " + err.message + "<br><br>Or open this link on mobile:<br><a href='" + window.location.href + "' style='color:#00ff88; font-size:12px; word-break:break-all;'>" + window.location.href + "</a>", "#ff5555");
         }
       }
     };
 
     // === Return to Bot ===
     document.getElementById("backToBot").onclick = () => {
-      log("Back button clicked");
+      log("⬅️ Back button clicked");
       if (tg && typeof tg.close === 'function') {
         tg.close();
       } else {
@@ -267,21 +270,41 @@
       }
     };
 
-    // Проверка загрузки библиотек
+    // === Проверка при загрузке страницы ===
     window.addEventListener('load', () => {
-      log("Page loaded");
-      log("ethers: " + (typeof ethers !== 'undefined' ? "✅" : "❌"));
-      log("QRCode: " + (typeof QRCode !== 'undefined' ? "✅" : "❌"));
-      log("MetaMask: " + (typeof window.ethereum !== 'undefined' ? "✅" : "❌"));
-      log("Telegram: " + (tg ? "✅" : "❌"));
+      log("✅ Page loaded");
       
-      updateStatus("Ready to connect 🚀", "#00ff88");
+      // Проверка MetaMask
+      if (typeof window.ethereum !== 'undefined') {
+        log("✅ MetaMask detected");
+        
+        // Проверяем уже подключенный кошелёк
+        if (window.ethereum.selectedAddress) {
+          const addr = window.ethereum.selectedAddress;
+          log("💼 Wallet connected: " + addr.substring(0, 10) + "...");
+          updateStatus("💼 Wallet already connected: <code>" + addr + "</code><br><small>Click button to reconnect</small>", "#00ff88");
+        } else {
+          updateStatus("Ready to connect! 🚀", "#00ff88");
+        }
+      } else {
+        log("⚠️ MetaMask NOT detected");
+        updateStatus("⚠️ Install MetaMask to continue", "#ffcc00");
+      }
+      
+      log("QRCode lib: " + (typeof QRCode !== 'undefined' ? "✅" : "⏳"));
     });
 
-    // Автоматическая попытка подключения если MetaMask уже разрешил доступ
-    if (typeof window.ethereum !== 'undefined' && window.ethereum.selectedAddress) {
-      log("Wallet already connected: " + window.ethereum.selectedAddress);
-      updateStatus("💼 Wallet already connected: <code>" + window.ethereum.selectedAddress + "</code>", "#00ff88");
+    // Слушаем изменения аккаунта в MetaMask
+    if (typeof window.ethereum !== 'undefined') {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length > 0) {
+          log("🔄 Account changed: " + accounts[0].substring(0, 10) + "...");
+          updateStatus("🔄 Account changed: <code>" + accounts[0] + "</code>", "#00ccff");
+        } else {
+          log("🔌 Wallet disconnected");
+          updateStatus("🔌 Wallet disconnected", "#ffcc00");
+        }
+      });
     }
   </script>
 </body>
