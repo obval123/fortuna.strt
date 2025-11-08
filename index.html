@@ -3,26 +3,105 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Connect Wallet</title>
+  <title>Fortuna Nexus | Connect Wallet</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
   <style>
-    body { font-family: Arial; text-align: center; padding: 50px; background: #f0f0f0; }
-    button { padding: 15px 30px; font-size: 18px; background: #1a73e8; color: white; border: none; border-radius: 8px; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: radial-gradient(circle at top, #0a0a0f 0%, #111 100%);
+      color: #e0e0e0;
+      text-align: center;
+      margin: 0;
+      padding: 60px 20px;
+    }
+    .container {
+      max-width: 420px;
+      margin: auto;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 40px 30px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.6);
+    }
+    h1 {
+      font-size: 26px;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    p.desc {
+      font-size: 15px;
+      color: #aaa;
+      margin-bottom: 25px;
+      line-height: 1.4;
+    }
+    button {
+      padding: 14px 28px;
+      font-size: 18px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .connect {
+      background: linear-gradient(135deg, #00aaff, #0055ff);
+      color: white;
+      box-shadow: 0 0 10px rgba(0,85,255,0.5);
+    }
+    .connect:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0,136,255,0.7);
+    }
+    .return {
+      background: #222;
+      color: #ccc;
+    }
+    .opensea {
+      background: linear-gradient(135deg, #2081e2, #1868b7);
+      color: white;
+    }
+    #status {
+      margin-top: 15px;
+      font-size: 15px;
+      color: #77dd77;
+      word-break: break-all;
+    }
+    .logo {
+      width: 90px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,136,255,0.4);
+    }
   </style>
 </head>
 <body>
-  <h2>Connect Your Wallet</h2>
-  <button id="connect">Connect MetaMask</button>
-  <p id="status"></p>
+  <div class="container">
+    <img src="https://i.ibb.co/qNsN2dg/fortuna-logo.png" alt="Fortuna Nexus" class="logo">
+    <h1>Fortuna Nexus</h1>
+    <p class="desc">Connect your MetaMask wallet to join the Fortuna draws and unlock your chance to win big. Your luck lives on the blockchain.</p>
+    
+    <button id="connect" class="connect">🔗 Connect Wallet</button>
+    <button id="return" class="return">⬅️ Return to Bot</button>
+    <a href="https://opensea.io/collection/fortuna-nexus" target="_blank">
+      <button class="opensea">🌊 View on OpenSea</button>
+    </a>
+    <p id="status"></p>
+  </div>
 
   <script>
     const connectBtn = document.getElementById("connect");
+    const returnBtn = document.getElementById("return");
     const status = document.getElementById("status");
+
+    const tg = window.Telegram?.WebApp;
+    if (tg) tg.expand();
 
     connectBtn.onclick = async () => {
       if (!window.ethereum) {
-        status.innerText = "MetaMask not found!";
+        status.style.color = "#ff5555";
+        status.innerText = "❌ MetaMask not found. Please install it first.";
         return;
       }
 
@@ -32,16 +111,21 @@
         const signer = provider.getSigner();
         const address = await signer.getAddress();
 
-        const tg = window.Telegram?.WebApp;
         if (tg) {
-          tg.expand();
-          tg.sendData(address); // отправляем адрес обратно в Telegram
+          tg.sendData(address);
+          status.innerText = "✅ Connected: " + address;
         } else {
-          status.innerText = "Connected: " + address;
+          status.innerText = "✅ Connected: " + address;
         }
       } catch (err) {
-        status.innerText = "Error: " + err.message;
+        status.style.color = "#ff5555";
+        status.innerText = "⚠️ Error: " + err.message;
       }
+    };
+
+    returnBtn.onclick = () => {
+      if (tg) tg.close();
+      else window.close();
     };
   </script>
 </body>
