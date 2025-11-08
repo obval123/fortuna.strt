@@ -135,7 +135,7 @@
         updateStatus("📱 Scan QR code with MetaMask Mobile:", "#00ffcc");
 
         // FIX: lowercase variable name
-        qrcode.toCanvas(qrContainer, uri, { width: 200 });
+        QRCode.toCanvas(qrContainer, uri, { width: 200 });
 
         connector.on("connect", (error, payload) => {
           if (error) throw error;
@@ -157,4 +157,5 @@
   </script>
 </body>
 </html>
+
 
