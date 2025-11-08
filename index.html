@@ -44,11 +44,15 @@
       cursor: pointer;
       transition: 0.2s;
     }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     .metamask { background: #f6851b; color: white; }
     .walletconnect { background: #3b99fc; color: white; }
     .openbrowser { background: #28a745; color: white; }
     .back { background: #444; color: white; }
-    button:hover { opacity: 0.9; transform: scale(1.03); }
+    button:hover:not(:disabled) { opacity: 0.9; transform: scale(1.03); }
     #status { margin-top: 20px; font-size: 14px; opacity: 0.9; }
     .qrcode { margin: 20px auto; }
     a { color: #3b99fc; text-decoration: none; }
@@ -56,7 +60,7 @@
 </head>
 <body>
   <div class="container">
-    <img src="logo.png" alt="Fortuna Nexus Logo" class="logo">
+    <img src="logo.png" alt="Fortuna Nexus Logo" class="logo" onerror="this.style.display='none'">
     <h2>Connect Your Wallet</h2>
 
     <button id="connectMetaMask" class="metamask">🦊 Connect MetaMask</button>
@@ -74,15 +78,21 @@
 
   <script>
     const tg = window.Telegram?.WebApp;
-    if (tg) tg.expand();
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
 
     const status = document.getElementById("status");
     const qrContainer = document.getElementById("qrcode");
     const openBrowserBtn = document.getElementById("openInBrowser");
+    const connectMetaMaskBtn = document.getElementById("connectMetaMask");
+    const connectWCBtn = document.getElementById("connectWC");
 
     const updateStatus = (msg, color = "#fff") => {
       status.style.color = color;
       status.innerHTML = msg;
+      console.log("Status:", msg);
     };
 
     // === Detect environment ===
@@ -90,10 +100,12 @@
     const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
     const isDesktopTelegram = isTelegram && !isMobile;
 
+    console.log("Environment:", { isTelegram, isMobile, isDesktopTelegram });
+
     if (isDesktopTelegram) {
       openBrowserBtn.style.display = "block";
-      document.getElementById("connectMetaMask").disabled = true;
-      document.getElementById("connectWC").disabled = true;
+      connectMetaMaskBtn.disabled = true;
+      connectWCBtn.disabled = true;
       updateStatus("⚠️ Please open this link in your browser to connect MetaMask.", "#ffcc00");
     }
 
@@ -101,61 +113,135 @@
       window.open("https://fortuna-strt.vercel.app", "_blank");
     };
 
+    // === Функция отправки данных в бот ===
+    function sendAddressToBot(address) {
+      console.log("Sending address to bot:", address);
+      if (tg && tg.sendData) {
+        try {
+          tg.sendData(address);
+          updateStatus("✅ Connected! Sending to bot...", "#00ff88");
+        } catch (err) {
+          console.error("Error sending data to bot:", err);
+          updateStatus("✅ Connected: " + address + "<br>⚠️ Could not send to bot automatically.", "#ffcc00");
+        }
+      } else {
+        updateStatus("✅ Connected: " + address + "<br>ℹ️ Copy this address and send to bot.", "#00ff88");
+      }
+    }
+
     // === MetaMask Connect ===
-    document.getElementById("connectMetaMask").onclick = async () => {
-      if (!window.ethereum) {
-        updateStatus("❌ MetaMask not found.<br>Open this page in a browser with MetaMask installed.", "#ff5555");
+    connectMetaMaskBtn.onclick = async () => {
+      console.log("MetaMask button clicked");
+      updateStatus("🔄 Connecting to MetaMask...", "#00ccff");
+      
+      if (typeof window.ethereum === 'undefined') {
+        updateStatus("❌ MetaMask not found.<br>Install MetaMask extension or open in MetaMask browser.", "#ff5555");
+        console.error("MetaMask not found");
         return;
       }
+
       try {
+        console.log("Requesting accounts...");
         const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        console.log("Accounts received:", accounts);
+        
         const signer = provider.getSigner();
         const address = await signer.getAddress();
-        updateStatus("✅ Connected: " + address);
-
-        if (tg) tg.sendData(address);
+        console.log("Address:", address);
+        
+        sendAddressToBot(address);
       } catch (err) {
-        updateStatus("❌ Error: " + err.message, "#ff5555");
+        console.error("MetaMask error:", err);
+        updateStatus("❌ Error: " + (err.message || "Connection failed"), "#ff5555");
       }
     };
 
     // === WalletConnect Connect ===
-    document.getElementById("connectWC").onclick = async () => {
+    connectWCBtn.onclick = async () => {
+      console.log("WalletConnect button clicked");
+      
+      if (typeof window.WalletConnect === 'undefined') {
+        updateStatus("❌ WalletConnect library not loaded", "#ff5555");
+        console.error("WalletConnect not available");
+        return;
+      }
+
       try {
         updateStatus("🔗 Initializing WalletConnect...");
         qrContainer.innerHTML = "";
 
         const bridge = "https://bridge.walletconnect.org";
-        const connector = new window.WalletConnect.default({ bridge, qrcodeModal: null });
+        const connector = new window.WalletConnect.default({ 
+          bridge, 
+          qrcodeModal: null 
+        });
 
-        if (!connector.connected) await connector.createSession();
+        console.log("WalletConnect connector created");
+
+        if (!connector.connected) {
+          console.log("Creating session...");
+          await connector.createSession();
+        }
 
         const uri = connector.uri;
-        updateStatus("📱 Scan QR code with MetaMask Mobile:", "#00ffcc");
+        console.log("WalletConnect URI:", uri);
+        
+        updateStatus("📱 Scan QR code with your wallet app:", "#00ffcc");
 
-        // FIX: lowercase variable name
-        QRCode.toCanvas(qrContainer, uri, { width: 200 });
+        // ИСПРАВЛЕНО: QRCode вместо qrcode
+        const canvas = document.createElement('canvas');
+        qrContainer.appendChild(canvas);
+        QRCode.toCanvas(canvas, uri, { width: 200 }, function(error) {
+          if (error) {
+            console.error("QR Code error:", error);
+            updateStatus("❌ Failed to generate QR code", "#ff5555");
+          } else {
+            console.log("QR code generated successfully");
+          }
+        });
 
         connector.on("connect", (error, payload) => {
-          if (error) throw error;
+          if (error) {
+            console.error("WalletConnect connect error:", error);
+            throw error;
+          }
+          console.log("WalletConnect connected:", payload);
           const { accounts } = payload.params[0];
           const address = accounts[0];
-          updateStatus("✅ Connected: " + address);
-          if (tg) tg.sendData(address);
+          sendAddressToBot(address);
         });
+
+        connector.on("disconnect", (error, payload) => {
+          console.log("WalletConnect disconnected:", error, payload);
+        });
+
       } catch (err) {
-        updateStatus("❌ Error: " + err.message, "#ff5555");
+        console.error("WalletConnect error:", err);
+        updateStatus("❌ Error: " + (err.message || "Connection failed"), "#ff5555");
       }
     };
 
     // === Return to Bot ===
     document.getElementById("backToBot").onclick = () => {
-      if (tg) tg.close();
-      else window.location.href = "https://t.me/your_bot_username";
+      if (tg && tg.close) {
+        tg.close();
+      } else {
+        window.location.href = "https://t.me/fortunanexusgames_bot";
+      }
     };
+
+    // Проверка загрузки библиотек
+    window.addEventListener('load', () => {
+      console.log("Libraries loaded:");
+      console.log("- ethers:", typeof ethers);
+      console.log("- WalletConnect:", typeof window.WalletConnect);
+      console.log("- QRCode:", typeof QRCode);
+      console.log("- Telegram WebApp:", typeof tg);
+    });
   </script>
 </body>
 </html>
+
 
 
