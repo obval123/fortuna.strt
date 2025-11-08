@@ -44,34 +44,14 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    .metamask {
-      background: #f6851b;
-      color: white;
-    }
-    .walletconnect {
-      background: #3b99fc;
-      color: white;
-    }
-    .back {
-      background: #444;
-      color: white;
-    }
-    button:hover {
-      opacity: 0.9;
-      transform: scale(1.03);
-    }
-    #status {
-      margin-top: 20px;
-      font-size: 14px;
-      opacity: 0.9;
-    }
-    .qrcode {
-      margin: 20px auto;
-    }
-    a {
-      color: #3b99fc;
-      text-decoration: none;
-    }
+    .metamask { background: #f6851b; color: white; }
+    .walletconnect { background: #3b99fc; color: white; }
+    .openbrowser { background: #28a745; color: white; }
+    .back { background: #444; color: white; }
+    button:hover { opacity: 0.9; transform: scale(1.03); }
+    #status { margin-top: 20px; font-size: 14px; opacity: 0.9; }
+    .qrcode { margin: 20px auto; }
+    a { color: #3b99fc; text-decoration: none; }
   </style>
 </head>
 <body>
@@ -81,6 +61,7 @@
 
     <button id="connectMetaMask" class="metamask">🦊 Connect MetaMask</button>
     <button id="connectWC" class="walletconnect">🔗 Connect via WalletConnect</button>
+    <button id="openInBrowser" class="openbrowser" style="display:none;">🌐 Open in Browser</button>
     <button id="backToBot" class="back">⬅️ Back to Bot</button>
 
     <p id="status"></p>
@@ -97,10 +78,27 @@
 
     const status = document.getElementById("status");
     const qrContainer = document.getElementById("qrcode");
+    const openBrowserBtn = document.getElementById("openInBrowser");
 
     const updateStatus = (msg, color = "#fff") => {
       status.style.color = color;
       status.innerHTML = msg;
+    };
+
+    // === Detect environment ===
+    const isTelegram = !!tg;
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    const isDesktopTelegram = isTelegram && !isMobile;
+
+    if (isDesktopTelegram) {
+      openBrowserBtn.style.display = "block";
+      document.getElementById("connectMetaMask").disabled = true;
+      document.getElementById("connectWC").disabled = true;
+      updateStatus("⚠️ Please open this link in your browser to connect MetaMask.", "#ffcc00");
+    }
+
+    openBrowserBtn.onclick = () => {
+      window.open("https://fortuna-strt.vercel.app", "_blank");
     };
 
     // === MetaMask Connect ===
@@ -135,7 +133,9 @@
 
         const uri = connector.uri;
         updateStatus("📱 Scan QR code with MetaMask Mobile:", "#00ffcc");
-        QRCode.toCanvas(qrContainer, uri, { width: 200 });
+
+        // FIX: lowercase variable name
+        qrcode.toCanvas(qrContainer, uri, { width: 200 });
 
         connector.on("connect", (error, payload) => {
           if (error) throw error;
@@ -157,3 +157,4 @@
   </script>
 </body>
 </html>
+
