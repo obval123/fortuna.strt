@@ -11,67 +11,228 @@
   <meta property="og:image" content="https://fortuna-strt.vercel.app/logo.png">
   <meta name="description" content="Official Fortuna Nexus lottery wallet connection">
   <link rel="icon" type="image/png" href="logo.png">
+  
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
       font-family: 'Arial', sans-serif;
       background: linear-gradient(135deg, #1a1a2e, #16213e);
       color: white;
       text-align: center;
       padding: 50px 20px;
-      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    
     .container {
       max-width: 420px;
-      margin: 0 auto;
+      width: 100%;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 20px;
       padding: 40px;
       box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
     }
+    
     img.logo {
       width: 120px;
       border-radius: 16px;
       margin-bottom: 20px;
     }
+    
     h2 {
-      font-size: 22px;
-      margin-bottom: 25px;
+      font-size: 24px;
+      margin-bottom: 10px;
       font-weight: 600;
     }
+    
+    .subtitle {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-bottom: 30px;
+    }
+    
     button {
-      width: 90%;
+      width: 100%;
       margin: 10px 0;
-      padding: 14px;
+      padding: 16px;
       font-size: 16px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: 0.2s;
+      transition: all 0.3s ease;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
     }
+    
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
-    .metamask { background: #f6851b; color: white; }
-    .walletconnect { background: #3b99fc; color: white; }
-    .back { background: #444; color: white; }
-    button:hover:not(:disabled) { opacity: 0.9; transform: scale(1.03); }
-    #status { margin-top: 20px; font-size: 14px; opacity: 0.9; line-height: 1.5; }
-    .qrcode { margin: 20px auto; }
-    .qrcode canvas { border-radius: 12px; }
-    a { color: #3b99fc; text-decoration: none; }
-    .debug-info { 
-      margin-top: 20px; 
-      font-size: 11px; 
-      opacity: 0.5; 
-      text-align: left; 
-      max-height: 120px; 
-      overflow-y: auto;
-      background: rgba(0,0,0,0.3);
-      padding: 10px;
-      border-radius: 8px;
-      font-family: monospace;
+    
+    button img,
+    button svg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    
+    .metamask { 
+      background: linear-gradient(135deg, #f6851b, #e2761b);
+      color: white; 
+      box-shadow: 0 4px 15px rgba(246, 133, 27, 0.3);
+    }
+    
+    .walletconnect { 
+      background: linear-gradient(135deg, #3b99fc, #2c7dd8);
+      color: white; 
+      box-shadow: 0 4px 15px rgba(59, 153, 252, 0.3);
+    }
+    
+    .back { 
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    button:hover:not(:disabled) { 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    
+    .links {
+      margin-top: 40px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .links-title {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .social-links {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .social-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      color: white;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .social-link img,
+    .social-link svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .social-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .social-link.opensea {
+      background: rgba(32, 129, 226, 0.1);
+      border-color: rgba(32, 129, 226, 0.3);
+    }
+    
+    .social-link.opensea:hover {
+      background: rgba(32, 129, 226, 0.2);
+      border-color: rgba(32, 129, 226, 0.5);
+    }
+    
+    .social-link.twitter {
+      background: rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .social-link.twitter:hover {
+      background: rgba(0, 0, 0, 0.5);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    
+    .qrcode {
+      margin: 20px auto;
+      display: none;
+    }
+    
+    .qrcode.active {
+      display: block;
+    }
+    
+    .qrcode canvas {
+      border-radius: 12px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .qr-instruction {
+      margin-top: 15px;
+      font-size: 13px;
+      opacity: 0.8;
+      line-height: 1.6;
+    }
+    
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 12px;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      max-width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    
+    .toast.success {
+      background: linear-gradient(135deg, #00ff88, #00cc70);
+      color: #000;
+    }
+    
+    .toast.error {
+      background: linear-gradient(135deg, #ff5555, #dd3333);
     }
   </style>
 </head>
@@ -79,170 +240,164 @@
   <div class="container">
     <img src="logo.png" alt="Fortuna Nexus Logo" class="logo" onerror="this.style.display='none'">
     <h2>Connect Your Wallet</h2>
+    <p class="subtitle">Choose your preferred connection method</p>
 
-    <button id="connectMetaMask" class="metamask">🦊 Connect MetaMask</button>
-    <button id="connectWC" class="walletconnect">📱 Mobile Wallet (QR)</button>
-    <button id="backToBot" class="back">⬅️ Back to Bot</button>
-
-    <p id="status"></p>
+    <button id="connectMetaMask" class="metamask">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
+      <span>Connect MetaMask</span>
+    </button>
+    
+    <button id="connectWC" class="walletconnect">
+      <svg viewBox="0 0 300 185" fill="white">
+        <path d="M61.439 36.256c48.91-47.888 128.212-47.888 177.123 0l5.886 5.764a6.041 6.041 0 0 1 0 8.67l-20.136 19.716a3.179 3.179 0 0 1-4.428 0l-8.101-7.931c-34.122-33.408-89.444-33.408-123.566 0l-8.675 8.494a3.179 3.179 0 0 1-4.428 0L54.978 51.253a6.041 6.041 0 0 1 0-8.67l6.461-6.327ZM280.206 77.03l17.922 17.547a6.041 6.041 0 0 1 0 8.67l-80.81 79.122c-2.446 2.394-6.41 2.394-8.857 0l-57.354-56.155a1.59 1.59 0 0 0-2.214 0L91.54 182.368c-2.446 2.394-6.411 2.394-8.857 0L1.872 103.247a6.041 6.041 0 0 1 0-8.671l17.922-17.547c2.445-2.394 6.41-2.394 8.856 0l57.355 56.155a1.59 1.59 0 0 0 2.214 0L145.57 77.03c2.446-2.394 6.41-2.395 8.856 0l57.355 56.155a1.59 1.59 0 0 0 2.214 0L271.35 77.03c2.446-2.394 6.41-2.394 8.856 0Z"/>
+      </svg>
+      <span>Mobile Wallet (QR)</span>
+    </button>
+    
     <div id="qrcode" class="qrcode"></div>
-    <div id="debug" class="debug-info"></div>
+    
+    <button id="backToBot" class="back">
+      <span>⬅️</span>
+      <span>Back to Bot</span>
+    </button>
 
-    <p style="margin-top:30px;">
-      View collection on <a href="https://opensea.io/collection/fortuna-nexus" target="_blank">OpenSea</a>
-    </p>
+    <div class="links">
+      <div class="links-title">Join Our Community</div>
+      <div class="social-links">
+        <a href="https://opensea.io/collection/fortuna-nexus" target="_blank" class="social-link opensea">
+          <svg viewBox="0 0 90 90" fill="currentColor">
+            <path d="M45 0C20.151 0 0 20.151 0 45c0 24.849 20.151 45 45 45s45-20.151 45-45C90 20.151 69.849 0 45 0zm13.202 50.356h-13.63a.965.965 0 0 1-.812-.443L38.88 40.8a.477.477 0 0 1 .414-.724h14.336c.358 0 .593.377.443.712l-4.879 9.113a.965.965 0 0 1-.812.443v.012z"/>
+          </svg>
+          <span>OpenSea</span>
+        </a>
+        
+        <a href="https://x.com/fortunanexus" target="_blank" class="social-link twitter">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          <span>X (Twitter)</span>
+        </a>
+      </div>
+    </div>
   </div>
+
+  <div id="toast" class="toast"></div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   
   <script>
-    // Debug logger
-    const debugLog = [];
-    const debugDiv = document.getElementById("debug");
-    
-    function log(message) {
-      console.log(message);
-      const time = new Date().toLocaleTimeString();
-      debugLog.push(time + ": " + message);
-      if (debugLog.length > 8) debugLog.shift();
-      debugDiv.innerHTML = debugLog.join('<br>');
+    // Toast notification function
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show ' + type;
+      
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 3000);
     }
-
-    log("🚀 Script started");
 
     // Telegram WebApp initialization
     const tg = window.Telegram?.WebApp;
     if (tg) {
-      log("✅ Telegram WebApp detected");
       tg.ready();
       tg.expand();
-    } else {
-      log("🌐 Browser mode");
     }
 
-    const status = document.getElementById("status");
     const qrContainer = document.getElementById("qrcode");
     const connectMetaMaskBtn = document.getElementById("connectMetaMask");
     const connectWCBtn = document.getElementById("connectWC");
 
-    const updateStatus = (msg, color = "#fff") => {
-      status.style.color = color;
-      status.innerHTML = msg;
-      log("Status: " + msg.replace(/<[^>]*>/g, ''));
-    };
-
     // === Функция отправки данных в бот ===
     function sendAddressToBot(address) {
-      log("📤 Sending: " + address.substring(0, 10) + "...");
+      console.log("Sending address to bot:", address);
       
       if (tg && typeof tg.sendData === 'function') {
         try {
           tg.sendData(address);
-          updateStatus("✅ Connected! Address sent to bot.", "#00ff88");
-          log("✅ Data sent via Telegram");
+          showToast("✅ Wallet connected successfully!", "success");
           
           // Закрываем WebApp через 2 секунды
           setTimeout(() => {
             if (tg.close) tg.close();
           }, 2000);
         } catch (err) {
-          log("⚠️ Telegram send failed: " + err.message);
-          updateStatus("✅ Connected: <code>" + address + "</code><br>⚠️ Please copy and send to bot manually.", "#ffcc00");
+          console.error("Error sending to bot:", err);
+          showToast("⚠️ Connected, but couldn't send to bot", "error");
         }
       } else {
-        log("ℹ️ Manual copy needed");
-        updateStatus("✅ Connected: <code>" + address + "</code><br>📋 Copy this address and send it to the bot.", "#00ff88");
+        showToast("✅ Wallet connected!", "success");
       }
     }
 
-    // === MetaMask Connect (БЕЗ ETHERS.JS - НАПРЯМУЮ!) ===
+    // === MetaMask Connect ===
     connectMetaMaskBtn.onclick = async () => {
-      log("🦊 MetaMask button clicked");
-      updateStatus("🔄 Connecting to MetaMask...", "#00ccff");
+      console.log("MetaMask button clicked");
       
-      // Проверка наличия MetaMask
       if (typeof window.ethereum === 'undefined') {
-        updateStatus("❌ MetaMask not found.<br><br>📥 Install from <a href='https://metamask.io/download' target='_blank' style='color:#00ff88'>metamask.io/download</a>", "#ff5555");
-        log("❌ MetaMask not detected");
+        showToast("❌ MetaMask not found. Install it first!", "error");
+        window.open('https://metamask.io/download', '_blank');
         return;
       }
 
       try {
-        log("📞 Requesting accounts...");
-        
-        // ПРЯМОЙ ЗАПРОС К METAMASK (без ethers.js)
         const accounts = await window.ethereum.request({ 
           method: 'eth_requestAccounts' 
         });
-        
-        log("✅ Got " + accounts.length + " account(s)");
         
         if (!accounts || accounts.length === 0) {
           throw new Error("No accounts returned");
         }
         
         const address = accounts[0];
-        log("✅ Address: " + address);
+        console.log("Connected:", address);
         
         sendAddressToBot(address);
         
       } catch (err) {
-        log("❌ Error: " + err.message);
+        console.error("MetaMask error:", err);
         
         if (err.code === 4001) {
-          updateStatus("❌ You rejected the connection request", "#ff5555");
+          showToast("❌ Connection rejected", "error");
         } else if (err.code === -32002) {
-          updateStatus("⚠️ MetaMask is already processing a request.<br>Check MetaMask extension!", "#ffcc00");
+          showToast("⚠️ Check MetaMask extension!", "error");
         } else {
-          updateStatus("❌ Error: " + err.message, "#ff5555");
+          showToast("❌ Connection failed", "error");
         }
       }
     };
 
     // === Mobile Wallet QR Code ===
     connectWCBtn.onclick = async () => {
-      log("📱 QR button clicked");
-      
-      // Для мобильных - открываем MetaMask напрямую
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       
       if (isMobile) {
-        updateStatus("📱 Opening MetaMask Mobile...", "#00ccff");
-        log("📱 Mobile detected");
-        
-        // Deep link для MetaMask Mobile
-        const currentUrl = window.location.href;
+        showToast("📱 Opening MetaMask...", "success");
         const metamaskUrl = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
-        
-        updateStatus("📱 If MetaMask doesn't open automatically,<br>click <a href='" + metamaskUrl + "' style='color:#00ff88; text-decoration:underline;'>here</a>", "#00ffcc");
         
         setTimeout(() => {
           window.location.href = metamaskUrl;
         }, 500);
         
       } else {
-        // Для десктопа показываем QR код
-        updateStatus("📱 <strong>Scan with Mobile Wallet:</strong><br>1. Open MetaMask app on phone<br>2. Tap Scanner icon<br>3. Scan QR below<br>4. Connect wallet", "#00ffcc");
-        
         qrContainer.innerHTML = "";
+        qrContainer.classList.add('active');
         
         try {
           const pageUrl = window.location.href;
-          log("🔲 Generating QR for: " + pageUrl.substring(0, 30) + "...");
           
           if (typeof QRCode === 'undefined') {
-            log("⚠️ QRCode library loading...");
-            // Даём время библиотеке загрузиться
             await new Promise(resolve => setTimeout(resolve, 500));
-            
-            if (typeof QRCode === 'undefined') {
-              throw new Error("QRCode library failed to load");
-            }
           }
           
           const canvas = document.createElement('canvas');
           qrContainer.appendChild(canvas);
+          
+          const instruction = document.createElement('p');
+          instruction.className = 'qr-instruction';
+          instruction.innerHTML = '<strong>Scan with your mobile wallet:</strong><br>1. Open MetaMask app<br>2. Tap Scanner<br>3. Scan this QR code';
+          qrContainer.appendChild(instruction);
           
           QRCode.toCanvas(canvas, pageUrl, { 
             width: 250,
@@ -253,23 +408,22 @@
             }
           }, function(error) {
             if (error) {
-              log("❌ QR error: " + error);
-              updateStatus("❌ Failed to generate QR code", "#ff5555");
+              showToast("❌ QR generation failed", "error");
+              qrContainer.classList.remove('active');
             } else {
-              log("✅ QR code generated");
+              showToast("📱 QR code ready!", "success");
             }
           });
           
         } catch (err) {
-          log("❌ QR error: " + err.message);
-          updateStatus("❌ Error generating QR: " + err.message + "<br><br>Or open this link on mobile:<br><a href='" + window.location.href + "' style='color:#00ff88; font-size:12px; word-break:break-all;'>" + window.location.href + "</a>", "#ff5555");
+          showToast("❌ Error: " + err.message, "error");
+          qrContainer.classList.remove('active');
         }
       }
     };
 
     // === Return to Bot ===
     document.getElementById("backToBot").onclick = () => {
-      log("⬅️ Back button clicked");
       if (tg && typeof tg.close === 'function') {
         tg.close();
       } else {
@@ -277,39 +431,11 @@
       }
     };
 
-    // === Проверка при загрузке страницы ===
-    window.addEventListener('load', () => {
-      log("✅ Page loaded");
-      
-      // Проверка MetaMask
-      if (typeof window.ethereum !== 'undefined') {
-        log("✅ MetaMask detected");
-        
-        // Проверяем уже подключенный кошелёк
-        if (window.ethereum.selectedAddress) {
-          const addr = window.ethereum.selectedAddress;
-          log("💼 Wallet connected: " + addr.substring(0, 10) + "...");
-          updateStatus("💼 Wallet already connected: <code>" + addr + "</code><br><small>Click button to reconnect</small>", "#00ff88");
-        } else {
-          updateStatus("Ready to connect! 🚀", "#00ff88");
-        }
-      } else {
-        log("⚠️ MetaMask NOT detected");
-        updateStatus("⚠️ Install MetaMask to continue", "#ffcc00");
-      }
-      
-      log("QRCode lib: " + (typeof QRCode !== 'undefined' ? "✅" : "⏳"));
-    });
-
     // Слушаем изменения аккаунта в MetaMask
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.on('accountsChanged', (accounts) => {
         if (accounts.length > 0) {
-          log("🔄 Account changed: " + accounts[0].substring(0, 10) + "...");
-          updateStatus("🔄 Account changed: <code>" + accounts[0] + "</code>", "#00ccff");
-        } else {
-          log("🔌 Wallet disconnected");
-          updateStatus("🔌 Wallet disconnected", "#ffcc00");
+          showToast("🔄 Account changed", "success");
         }
       });
     }
