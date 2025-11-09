@@ -91,10 +91,10 @@
       content: '🚫 Wrong device';
       position: absolute;
       right: 15px;
-      font-size: 12px;
+      font-size: 11px;
       background: rgba(255, 0, 0, 0.2);
-      padding: 4px 8px;
-      border-radius: 6px;
+      padding: 3px 7px;
+      border-radius: 5px;
     }
     
     button img,
@@ -206,27 +206,6 @@
       border-color: rgba(255, 255, 255, 0.4);
     }
     
-    .qrcode {
-      margin: 20px auto;
-      display: none;
-    }
-    
-    .qrcode.active {
-      display: block;
-    }
-    
-    .qrcode canvas {
-      border-radius: 12px;
-      border: 3px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .qr-instruction {
-      margin-top: 15px;
-      font-size: 13px;
-      opacity: 0.8;
-      line-height: 1.6;
-    }
-    
     /* Toast notification */
     .toast {
       position: fixed;
@@ -265,7 +244,7 @@
   <div class="container">
     <img src="logo.png" alt="Fortuna Nexus Logo" class="logo" onerror="this.style.display='none'">
     <h2>Connect Your Wallet</h2>
-    <p class="subtitle">Choose your preferred connection method</p>
+    <p class="subtitle">Choose your connection method</p>
 
     <button id="connectMetaMask" class="metamask">
       <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
@@ -273,15 +252,13 @@
     </button>
     <p id="metamaskHint" class="device-hint"></p>
     
-    <button id="connectWC" class="walletconnect">
+    <button id="connectMobile" class="walletconnect">
       <svg viewBox="0 0 300 185" fill="white">
         <path d="M61.439 36.256c48.91-47.888 128.212-47.888 177.123 0l5.886 5.764a6.041 6.041 0 0 1 0 8.67l-20.136 19.716a3.179 3.179 0 0 1-4.428 0l-8.101-7.931c-34.122-33.408-89.444-33.408-123.566 0l-8.675 8.494a3.179 3.179 0 0 1-4.428 0L54.978 51.253a6.041 6.041 0 0 1 0-8.67l6.461-6.327ZM280.206 77.03l17.922 17.547a6.041 6.041 0 0 1 0 8.67l-80.81 79.122c-2.446 2.394-6.41 2.394-8.857 0l-57.354-56.155a1.59 1.59 0 0 0-2.214 0L91.54 182.368c-2.446 2.394-6.411 2.394-8.857 0L1.872 103.247a6.041 6.041 0 0 1 0-8.671l17.922-17.547c2.445-2.394 6.41-2.394 8.856 0l57.355 56.155a1.59 1.59 0 0 0 2.214 0L145.57 77.03c2.446-2.394 6.41-2.395 8.856 0l57.355 56.155a1.59 1.59 0 0 0 2.214 0L271.35 77.03c2.446-2.394 6.41-2.394 8.856 0Z"/>
       </svg>
-      <span>Mobile Wallet (QR)</span>
+      <span>Mobile Wallet</span>
     </button>
-    <p id="wcHint" class="device-hint"></p>
-    
-    <div id="qrcode" class="qrcode"></div>
+    <p id="mobileHint" class="device-hint"></p>
     
     <button id="backToBot" class="back">
       <span>⬅️</span>
@@ -311,16 +288,15 @@
   <div id="toast" class="toast"></div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   
   <script>
     // Определяем устройство
     const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
     const isDesktop = !isMobile;
     
-    console.log("Device detected:", isMobile ? "Mobile" : "Desktop");
+    console.log("Device:", isMobile ? "Mobile" : "Desktop");
     
-    // Toast notification
+    // Toast
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -338,87 +314,83 @@
       tg.expand();
     }
 
-    const qrContainer = document.getElementById("qrcode");
     const connectMetaMaskBtn = document.getElementById("connectMetaMask");
-    const connectWCBtn = document.getElementById("connectWC");
+    const connectMobileBtn = document.getElementById("connectMobile");
     const metamaskHint = document.getElementById("metamaskHint");
-    const wcHint = document.getElementById("wcHint");
+    const mobileHint = document.getElementById("mobileHint");
 
-    // Настраиваем кнопки в зависимости от устройства
+    // Настраиваем кнопки
     if (isMobile) {
-      // На мобильном: отключаем кнопку QR (она для десктопа)
-      connectWCBtn.disabled = true;
-      connectWCBtn.classList.add('wrong-device');
-      wcHint.textContent = "⚠️ Use this on desktop to scan QR code";
-      metamaskHint.textContent = "✅ Use this button";
+      // На мобильном: только Mobile Wallet активна
+      connectMetaMaskBtn.disabled = true;
+      connectMetaMaskBtn.classList.add('wrong-device');
+      metamaskHint.textContent = "⚠️ Use on desktop computer";
+      mobileHint.textContent = "✅ Use this button";
     } else {
-      // На десктопе: обе кнопки активны
-      metamaskHint.textContent = "💻 For browser extension";
-      wcHint.textContent = "📱 Scan with mobile wallet";
+      // На десктопе: только Connect MetaMask активна
+      connectMobileBtn.disabled = true;
+      connectMobileBtn.classList.add('wrong-device');
+      metamaskHint.textContent = "✅ Use this button";
+      mobileHint.textContent = "⚠️ Use on mobile device";
     }
 
-    // === Функция отправки данных в бот ===
+    // Функция отправки данных в бот
     function sendAddressToBot(address) {
-      console.log("Sending address to bot:", address);
+      console.log("Sending to bot:", address);
       
       if (tg && typeof tg.sendData === 'function') {
         try {
           tg.sendData(address);
-          showToast("✅ Wallet connected successfully!", "success");
+          showToast("✅ Wallet connected!", "success");
           
           setTimeout(() => {
             if (tg.close) tg.close();
           }, 2000);
         } catch (err) {
-          console.error("Error sending to bot:", err);
-          showToast("⚠️ Connected, but couldn't send to bot", "error");
+          console.error("Telegram sendData error:", err);
+          showToast("✅ Connected: " + address, "success");
         }
       } else {
-        showToast("✅ Wallet connected!", "success");
+        console.log("Telegram not available, showing address");
+        showToast("✅ Connected: " + address, "success");
       }
     }
 
-    // === MetaMask Connect (ИСПРАВЛЕНО) ===
+    // === DESKTOP: Connect MetaMask (открывает в браузере) ===
     connectMetaMaskBtn.onclick = async () => {
-      console.log("MetaMask button clicked");
+      if (isMobile) {
+        showToast("⚠️ Use Mobile Wallet button!", "error");
+        return;
+      }
+
+      console.log("Desktop MetaMask button clicked");
       
       // Проверка MetaMask
       if (typeof window.ethereum === 'undefined') {
         showToast("❌ MetaMask not installed!", "error");
         setTimeout(() => {
-          if (isMobile) {
-            // На мобильном открываем страницу в MetaMask браузере
-            window.location.href = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
-          } else {
-            // На десктопе открываем страницу установки
-            window.open('https://metamask.io/download', '_blank');
-          }
+          window.open('https://metamask.io/download', '_blank');
         }, 1000);
         return;
       }
 
-      // Блокируем кнопку
       connectMetaMaskBtn.disabled = true;
       connectMetaMaskBtn.innerHTML = '<span>⏳</span><span>Connecting...</span>';
 
       try {
-        console.log("Requesting MetaMask connection...");
+        console.log("Requesting accounts...");
         
-        // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Запрашиваем подключение
         const accounts = await window.ethereum.request({ 
           method: 'eth_requestAccounts' 
         });
         
-        console.log("Accounts received:", accounts);
-        
         if (!accounts || accounts.length === 0) {
-          throw new Error("No accounts found in MetaMask");
+          throw new Error("No accounts found");
         }
         
         const address = accounts[0];
-        console.log("Connected address:", address);
+        console.log("Connected:", address);
         
-        showToast("✅ MetaMask connected!", "success");
         sendAddressToBot(address);
         
       } catch (err) {
@@ -427,9 +399,9 @@
         if (err.code === 4001) {
           showToast("❌ Connection rejected", "error");
         } else if (err.code === -32002) {
-          showToast("⚠️ Check MetaMask - request pending!", "error");
+          showToast("⚠️ Check MetaMask extension!", "error");
         } else {
-          showToast("❌ " + (err.message || "Connection failed"), "error");
+          showToast("❌ " + (err.message || "Failed"), "error");
         }
       } finally {
         connectMetaMaskBtn.disabled = false;
@@ -437,56 +409,39 @@
       }
     };
 
-    // === Mobile Wallet QR Code ===
-    connectWCBtn.onclick = async () => {
-      if (isMobile) {
-        // На мобильном кнопка отключена
-        showToast("⚠️ Use MetaMask button on mobile!", "error");
+    // === MOBILE: Mobile Wallet (открывает MetaMask app) ===
+    connectMobileBtn.onclick = async () => {
+      if (isDesktop) {
+        showToast("⚠️ Use Connect MetaMask button!", "error");
         return;
       }
+
+      console.log("Mobile wallet button clicked");
       
-      // На десктопе показываем QR
-      qrContainer.innerHTML = "";
-      qrContainer.classList.add('active');
+      connectMobileBtn.disabled = true;
+      connectMobileBtn.innerHTML = '<span>⏳</span><span>Opening...</span>';
       
-      try {
-        const pageUrl = window.location.href;
-        
-        if (typeof QRCode === 'undefined') {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-        
-        const canvas = document.createElement('canvas');
-        qrContainer.appendChild(canvas);
-        
-        const instruction = document.createElement('p');
-        instruction.className = 'qr-instruction';
-        instruction.innerHTML = '<strong>📱 Scan with mobile wallet:</strong><br>1. Open MetaMask app on phone<br>2. Tap Browser or Scanner<br>3. Scan this QR code<br>4. Connect your wallet';
-        qrContainer.appendChild(instruction);
-        
-        QRCode.toCanvas(canvas, pageUrl, { 
-          width: 250,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        }, function(error) {
-          if (error) {
-            showToast("❌ QR generation failed", "error");
-            qrContainer.classList.remove('active');
-          } else {
-            showToast("📱 QR code ready to scan!", "success");
-          }
-        });
-        
-      } catch (err) {
-        showToast("❌ Error: " + err.message, "error");
-        qrContainer.classList.remove('active');
-      }
+      showToast("📱 Opening MetaMask app...", "success");
+      
+      // Deep link для MetaMask Mobile
+      const currentUrl = window.location.href;
+      const metamaskDeepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}${window.location.search}`;
+      
+      console.log("Opening:", metamaskDeepLink);
+      
+      // Даём время пользователю увидеть уведомление
+      setTimeout(() => {
+        window.location.href = metamaskDeepLink;
+      }, 500);
+      
+      // Возвращаем кнопку через 3 секунды (если пользователь вернулся)
+      setTimeout(() => {
+        connectMobileBtn.disabled = false;
+        connectMobileBtn.innerHTML = '<svg viewBox="0 0 300 185" fill="white"><path d="M61.439 36.256c48.91-47.888 128.212-47.888 177.123 0l5.886 5.764a6.041 6.041 0 0 1 0 8.67l-20.136 19.716a3.179 3.179 0 0 1-4.428 0l-8.101-7.931c-34.122-33.408-89.444-33.408-123.566 0l-8.675 8.494a3.179 3.179 0 0 1-4.428 0L54.978 51.253a6.041 6.041 0 0 1 0-8.67l6.461-6.327ZM280.206 77.03l17.922 17.547a6.041 6.041 0 0 1 0 8.67l-80.81 79.122c-2.446 2.394-6.41 2.394-8.857 0l-57.354-56.155a1.59 1.59 0 0 0-2.214 0L91.54 182.368c-2.446 2.394-6.411 2.394-8.857 0L1.872 103.247a6.041 6.041 0 0 1 0-8.671l17.922-17.547c2.445-2.394 6.41-2.394 8.856 0l57.355 56.155a1.59 1.59 0 0 0 2.214 0L145.57 77.03c2.446-2.394 6.41-2.395 8.856 0l57.355 56.155a1.59 1.59 0 0 0 2.214 0L271.35 77.03c2.446-2.394 6.41-2.394 8.856 0Z"/></svg><span>Mobile Wallet</span>';
+      }, 3000);
     };
 
-    // === Return to Bot ===
+    // Back to Bot
     document.getElementById("backToBot").onclick = () => {
       if (tg && typeof tg.close === 'function') {
         tg.close();
@@ -495,7 +450,7 @@
       }
     };
 
-    // Слушаем изменения аккаунта
+    // Слушаем изменения аккаунта (только desktop)
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.on('accountsChanged', (accounts) => {
         if (accounts.length > 0) {
